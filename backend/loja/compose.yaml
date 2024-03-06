@@ -1,14 +1,16 @@
 version: '2.4'
 services:
   db:
-    image: mysql
-    container_name: mysql
+    image: postgres
+    container_name: loja
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mysql
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lojaOnline
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - devdojo_maratona_data:/var/lib/mysql
+      - loja_data:/var/lib/postgresql/data
+
 volumes:
-  devdojo_maratona_data:
+  loja_data:
