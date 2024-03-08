@@ -29,9 +29,13 @@ public class EstadoService {
     }
 
     public Estado create(@Valid EstadoDTO estado) {
+        if (estadoRepository.existsByNomeOrSigla(estado.getNome(), estado.getSigla())) {
+            throw new DataIntegratyViolationException("Estado com o mesmo nome ou sigla já existe");
+        }
+
         Estado newEstado = fromDTO(estado);
         newEstado.setDataCriacao(new Date());
-        return newEstado;
+        return estadoRepository.save(newEstado);
     }
 
     public Estado update(Integer id, @Valid EstadoDTO estadoDTO) {

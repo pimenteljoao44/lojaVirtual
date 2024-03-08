@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.loja.loja.entidades.Estado;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,7 +12,9 @@ import java.util.Date;
 public class EstadoDTO implements Serializable {
 
     private Integer id;
+    @NotEmpty(message = "O Campo Nome é requerido.")
     private String nome;
+    @NotEmpty(message = "O campo Sigla é requerido.")
     private String sigla;
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private Date dataCriacao;
