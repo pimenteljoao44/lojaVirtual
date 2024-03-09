@@ -54,11 +54,10 @@ public class EstadoService {
 
     public Estado fromDTO(EstadoDTO obj) {
         Estado newEstado = new Estado();
-        newEstado.setEstId(obj.getId());
         newEstado.setNome(obj.getNome());
         newEstado.setSigla(obj.getSigla());
         newEstado.setDataCriacao(obj.getDataCriacao());
         newEstado.setDataAtualizacao(obj.getDataAtualizacao());
-        return estadoRepository.save(newEstado);
+        return newEstado;
     }
 }

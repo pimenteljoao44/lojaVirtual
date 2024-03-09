@@ -3,39 +3,36 @@ package com.loja.loja.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.loja.loja.entidades.Cidade;
 import com.loja.loja.entidades.Estado;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
-public class EstadoDTO implements Serializable {
+public class CidadeDTO implements Serializable {
 
     private Integer id;
     @NotEmpty(message = "O Campo Nome é requerido.")
     private String nome;
-    @NotEmpty(message = "O campo Sigla é requerido.")
-    private String sigla;
-
-    private List<Cidade> cidades;
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+    private Estado estado;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm", timezone = "America/Sao_Paulo")
     private Date dataCriacao;
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm", timezone = "America/Sao_Paulo")
     private Date dataAtualizacao;
 
-    public EstadoDTO(Estado obj) {
+    public CidadeDTO(Cidade obj) {
         super();
-        this.id = obj.getEstId();
+        this.id = obj.getCidId();
         this.nome = obj.getNome();
-        this.sigla = obj.getSigla();
-        this.cidades = obj.getCidades();
         this.dataCriacao = obj.getDataCriacao();
         this.dataAtualizacao = obj.getDataAtualizacao();
+
+        if (obj.getEstado() != null) {
+            this.estado = obj.getEstado();
+        }
     }
 
-    public EstadoDTO() {
+    public CidadeDTO() {
         super();
     }
 
@@ -55,20 +52,12 @@ public class EstadoDTO implements Serializable {
         this.nome = nome;
     }
 
-    public String getSigla() {
-        return sigla;
+    public Estado getEstado() {
+        return estado;
     }
 
-    public void setSigla(String sigla) {
-        this.sigla = sigla;
-    }
-
-    public List<Cidade> getCidades() {
-        return cidades;
-    }
-
-    public void setCidades(List<Cidade> cidades) {
-        this.cidades = cidades;
+    public void setEstado(Estado estado) {
+        this.estado = estado;
     }
 
     public Date getDataCriacao() {
