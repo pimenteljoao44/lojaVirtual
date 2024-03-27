@@ -1,5 +1,7 @@
 package com.loja.loja.entidades;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.loja.loja.dto.UserDTO;
 import com.loja.loja.entidades.enums.NivelAcesso;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
@@ -29,7 +31,9 @@ public class Usuario implements UserDetails {
 
     @NotEmpty(message = "Campo Senha é requerido")
     private String senha;
-
+    @OneToOne(cascade = {CascadeType.REMOVE,CascadeType.ALL}, orphanRemoval = true)
+    @JoinColumn(name = "pessoa_id", nullable = false)
+    private Pessoa pessoa;
 
     private Integer nivelAcesso;
 
@@ -37,19 +41,22 @@ public class Usuario implements UserDetails {
         super();
     }
 
-    public Usuario(Integer id, String nome, String login, String senha, NivelAcesso nivelAcesso) {
+    public Usuario(Integer id, String nome, String login, String senha, NivelAcesso nivelAcesso,Pessoa pessoa) {
         super();
         this.id = id;
         this.nome = nome;
         this.login = login;
         this.senha = senha;
         this.nivelAcesso = (nivelAcesso == null? 0: nivelAcesso.getCod());
+        this.pessoa = pessoa;
     }
 
-    public Usuario(String login, String senha, Integer nivelAcesso) {
-        this.login = login;
-        this.senha = senha;
-        this.nivelAcesso = nivelAcesso;
+    public Usuario(UserDTO objDTO) {
+        this.nome = objDTO.getNome();
+        this.login = objDTO.getLogin();
+        this.senha = objDTO.getSenha();
+        this.nivelAcesso = (objDTO.getNivelAcesso() == null? 0: objDTO.getNivelAcesso().getCod());
+        this.pessoa = objDTO.getPessoa();
     }
 
     public Integer getId() {
@@ -82,6 +89,14 @@ public class Usuario implements UserDetails {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    public Pessoa getPessoa() {
+        return pessoa;
+    }
+
+    public void setPessoa(Pessoa pessoa) {
+        this.pessoa = pessoa;
     }
 
     public NivelAcesso getNivelAcesso() {

@@ -1,5 +1,6 @@
 package com.loja.loja.dto;
 
+import com.loja.loja.entidades.Pessoa;
 import com.loja.loja.entidades.Usuario;
 import com.loja.loja.entidades.enums.NivelAcesso;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,6 +23,8 @@ public class UserDTO implements Serializable {
 
     private Integer nivelAcesso;
 
+    private Pessoa pessoa;
+
     public UserDTO() {
         super();
     }
@@ -32,7 +35,9 @@ public class UserDTO implements Serializable {
         this.nome = obj.getNome();
         this.login = obj.getLogin();
         this.senha = obj.getSenha();
-        this.nivelAcesso = obj.getNivelAcesso().getCod();
+        this.nivelAcesso = obj.getNivelAcesso().getCod() != null
+                ? obj.getNivelAcesso().getCod() : 0;
+        this.pessoa = obj.getPessoa();
     }
 
     public Integer getId() {
@@ -75,4 +80,11 @@ public class UserDTO implements Serializable {
         this.nivelAcesso = nivelAcesso;
     }
 
+    public Pessoa getPessoa() {
+        return pessoa;
+    }
+
+    public void setPessoa(Pessoa pessoa) {
+        this.pessoa = pessoa;
+    }
 }

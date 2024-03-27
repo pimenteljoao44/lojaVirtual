@@ -1,17 +1,27 @@
 package com.loja.loja.service;
 
 
+import com.loja.loja.dto.EnderecoDTO;
+import com.loja.loja.dto.PessoaDTO;
 import com.loja.loja.dto.UserDTO;
+import com.loja.loja.entidades.Cidade;
+import com.loja.loja.entidades.Endereco;
+import com.loja.loja.entidades.Pessoa;
 import com.loja.loja.entidades.Usuario;
 import com.loja.loja.entidades.enums.NivelAcesso;
+import com.loja.loja.repository.CidadeRepository;
+import com.loja.loja.repository.PessoaRepository;
 import com.loja.loja.repository.UserRepository;
 import com.loja.loja.service.exceptions.DataIntegratyViolationException;
 import com.loja.loja.service.exceptions.ObjectNotFoundException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,13 +31,14 @@ public class UserService {
     @Autowired
     private UserRepository repository;
 
-    private Usuario findByLogin(UserDTO objDTO) {
-        Usuario obj = repository.findByLogin(objDTO.getLogin());
-        if (obj != null) {
-            return obj;
-        }
-        return null;
-    }
+    @Autowired
+    private PessoaRepository pessoaRepository;
+
+    @Autowired
+    private CidadeRepository cidadeRepository;
+
+    @Autowired
+    private PessoaService pessoaService;
 
     public Usuario findById(Integer id) {
         Optional<Usuario> obj = repository.findById(id);
@@ -39,30 +50,87 @@ public class UserService {
     }
 
     public Usuario create(UserDTO objDTO) {
-        if (findByLogin(objDTO) != null) {
+        if (findByLogin(objDTO.getLogin()) != null) {
             throw new DataIntegratyViolationException("Usuário já cadastrado na base de dados!");
         }
-        return fromDTO(objDTO);
+        Pessoa pessoa = createPessoaFromDTO(objDTO);
+        pessoa = pessoaRepository.save(pessoa);
+
+        Usuario usuario = new Usuario(objDTO);
+        usuario.setPessoa(pessoa);
+        return repository.save(usuario);
     }
 
-    public Usuario update(@Valid UserDTO obj) {
-        findById(obj.getId());
-        return fromDTO(obj);
+    public Usuario update(UserDTO objDTO) {
+        Usuario oldObj = findById(objDTO.getId());
+        oldObj.setLogin(objDTO.getLogin());
+        oldObj.setNome(objDTO.getNome());
+        oldObj.setSenha(objDTO.getSenha());
+        oldObj.setNivelAcesso(objDTO.getNivelAcesso());
+
+        Pessoa pessoa = oldObj.getPessoa();
+        if (pessoa == null) {
+            throw new ObjectNotFoundException("Pessoa não encontrada para este usuário!");
+        }
+
+        pessoa.setNome(objDTO.getNome());
+        pessoa.setTelefone(objDTO.getPessoa().getTelefone());
+        pessoa.setCpf(objDTO.getPessoa().getCpf());
+        pessoa.setEmail(objDTO.getPessoa().getEmail());
+
+        if (objDTO.getPessoa().getEndereco() != null) {
+            Endereco endereco = pessoa.getEndereco();
+            if (endereco == null) {
+                endereco = new Endereco();
+                pessoa.setEndereco(endereco);
+            }
+            updateEndereco(endereco, new EnderecoDTO(objDTO.getPessoa().getEndereco()));
+        }
+
+        return repository.save(oldObj);
+    }
+
+    private void updateEndereco(Endereco endereco, EnderecoDTO enderecoDTO) {
+        endereco.setRua(enderecoDTO.getRua());
+        endereco.setNumero(enderecoDTO.getNumero());
+        endereco.setComplemento(enderecoDTO.getComplemento());
+        endereco.setBairro(enderecoDTO.getBairro());
+        endereco.setCep(enderecoDTO.getCep());
+
+        if (enderecoDTO.getCidade() != null) {
+            Cidade cidade = cidadeRepository.findById(enderecoDTO.getCidade().getCidId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Cidade não encontrada!"));
+            endereco.setCidade(cidade);
+        }
     }
 
     public void delete(Integer id) {
         repository.deleteById(id);
     }
 
-    private Usuario fromDTO(UserDTO obj) {
-        String encryptedPassword = new BCryptPasswordEncoder().encode(obj.getSenha());
-        Usuario newObj = new Usuario();
-        newObj.setId(obj.getId());
-        newObj.setNome(obj.getNome());
-        newObj.setLogin(obj.getLogin());
-        newObj.setSenha(encryptedPassword);
-        newObj.setNivelAcesso(NivelAcesso.toEnum(obj.getNivelAcesso().getCod()));
 
-        return repository.save(newObj);
+    public Pessoa createPessoaFromDTO(UserDTO objDTO) {
+        Pessoa pessoa = new Pessoa();
+        pessoa.setNome(objDTO.getNome());
+        pessoa.setTelefone(objDTO.getPessoa().getTelefone());
+        pessoa.setEmail(objDTO.getPessoa().getEmail());
+        pessoa.setCpf(objDTO.getPessoa().getCpf());
+        Hibernate.initialize(objDTO.getPessoa().getEndereco().getCidade());
+
+        Endereco endereco = new Endereco();
+        endereco.setRua(objDTO.getPessoa().getEndereco().getRua());
+        endereco.setNumero(objDTO.getPessoa().getEndereco().getNumero());
+        endereco.setComplemento(objDTO.getPessoa().getEndereco().getComplemento());
+        endereco.setBairro(objDTO.getPessoa().getEndereco().getBairro());
+        endereco.setCidade(objDTO.getPessoa().getEndereco().getCidade());
+        endereco.setPessoa(pessoa);
+
+        pessoa.setEndereco(endereco);
+
+        return pessoa;
+    }
+
+    private Usuario findByLogin(String login) {
+        return repository.findByLogin(login);
     }
 }
