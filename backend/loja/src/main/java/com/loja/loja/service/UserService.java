@@ -38,7 +38,7 @@ public class UserService {
     private CidadeRepository cidadeRepository;
 
     @Autowired
-    private PessoaService pessoaService;
+    private EmailService emailService;
 
     public Usuario findById(Integer id) {
         Optional<Usuario> obj = repository.findById(id);
@@ -58,6 +58,8 @@ public class UserService {
 
         Usuario usuario = new Usuario(objDTO);
         usuario.setPessoa(pessoa);
+        emailService.enviarEmailTexto(usuario.getPessoa().getEmail(),"Cadastro na loja da silvana",
+                "O registro na loja foi realizado com sucesso!");
         return repository.save(usuario);
     }
 
